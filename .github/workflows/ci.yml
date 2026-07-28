@@ -1,0 +1,57 @@
+name: CI
+
+on:
+  push:
+  pull_request:
+
+jobs:
+  validate-terminal-dotfiles:
+    name: Validate terminal dotfiles
+    runs-on: windows-latest
+
+    steps:
+      - name: Check out repository
+        uses: actions/checkout@v4
+
+      - name: Parse PowerShell scripts
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          $parseFailures = @()
+
+          Get-ChildItem -Path dotfiles/terminal -Filter '*.ps1' -Recurse | ForEach-Object {
+            $parseErrors = $null
+            [System.Management.Automation.Language.Parser]::ParseFile($_.FullName, [ref]$null, [ref]$parseErrors) | Out-Null
+            foreach ($parseError in $parseErrors) {
+              $parseFailures += [pscustomobject]@{
+                Path = $_.FullName
+                Line = $parseError.Extent.StartLineNumber
+                Column = $parseError.Extent.StartColumnNumber
+                Message = $parseError.Message
+              }
+            }
+          }
+
+          if ($parseFailures.Count -gt 0) {
+            $parseFailures | Format-Table -AutoSize | Out-String | Write-Error
+            exit 1
+          }
+
+      - name: Run PSScriptAnalyzer
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Set-PSRepository -Name PSGallery -InstallationPolicy Trusted
+          Install-Module -Name PSScriptAnalyzer -Scope CurrentUser -Force
+          $findings = Invoke-ScriptAnalyzer -Path dotfiles/terminal -Recurse -Severity Error
+
+          if ($findings) {
+            $findings | Format-Table -AutoSize | Out-String | Write-Error
+            exit 1
+          }
+
+      - name: Validate Oh My Posh theme JSON
+        shell: pwsh
+        run: |
+          $ErrorActionPreference = 'Stop'
+          Get-Content -Raw -LiteralPath dotfiles/terminal/minimal.omp.json | ConvertFrom-Json | Out-Null
