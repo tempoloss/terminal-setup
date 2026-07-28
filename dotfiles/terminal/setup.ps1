@@ -64,6 +64,48 @@ function Set-ObjectProperty {
 
     $Object | Add-Member -MemberType NoteProperty -Name $Name -Value $Value -Force
 }
+function Remove-JsonLineComments {
+    param(
+        [Parameter(Mandatory = $true)]
+        [string]$Json
+    )
+
+    $result = New-Object System.Text.StringBuilder
+    $inString = $false
+    $escaped = $false
+    $i = 0
+
+    while ($i -lt $Json.Length) {
+        $char = $Json[$i]
+        $next = if ($i + 1 -lt $Json.Length) { $Json[$i + 1] } else { [char]0 }
+
+        if (-not $inString -and $char -eq '/' -and $next -eq '/') {
+            while ($i -lt $Json.Length -and $Json[$i] -ne "`r" -and $Json[$i] -ne "`n") {
+                $i++
+            }
+            continue
+        }
+
+        [void]$result.Append($char)
+
+        if ($inString) {
+            if ($escaped) {
+                $escaped = $false
+            } elseif ($char -eq '\') {
+                $escaped = $true
+            } elseif ($char -eq '"') {
+                $inString = $false
+            }
+        } elseif ($char -eq '"') {
+            $inString = $true
+        }
+
+        $i++
+    }
+
+    $result.ToString()
+}
+
 
 function Update-WindowsTerminalSettings {
     param(
@@ -77,7 +119,8 @@ function Update-WindowsTerminalSettings {
         return
     }
 
-    $settings = Get-Content -Raw -LiteralPath $settingsPath | ConvertFrom-Json
+    $settingsContent = Get-Content -Raw -LiteralPath $settingsPath
+    $settings = Remove-JsonLineComments -Json $settingsContent | ConvertFrom-Json
     if (-not $settings.profiles) {
         Set-ObjectProperty -Object $settings -Name 'profiles' -Value ([pscustomobject]@{})
     }
@@ -127,6 +170,10 @@ function Update-WindowsTerminalSettings {
         Set-ObjectProperty -Object $defaults -Name 'font' -Value ([pscustomobject]@{})
     }
     Set-ObjectProperty -Object $defaults.font -Name 'face' -Value 'MesloLGS Nerd Font'
+
+    $backupPath = "$settingsPath.bak"
+    Copy-Item -LiteralPath $settingsPath -Destination $backupPath -Force
+    Write-Host "Backed up Windows Terminal settings to $backupPath"
 
     $settings | ConvertTo-Json -Depth 100 | Set-Content -LiteralPath $settingsPath -Encoding UTF8
     Write-Host 'Windows Terminal defaults updated.'

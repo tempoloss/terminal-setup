@@ -68,12 +68,7 @@ Documents\WindowsPowerShell\Microsoft.PowerShell_profile.ps1
 | `useAcrylic` | `false` |
 | `opacity` | `100` |
 
-Other colour schemes and profiles are preserved. **Comments in `settings.json` are not** — the file is reparsed and rewritten. Back it up first if it holds anything you care about:
-
-```powershell
-$s = "$env:LOCALAPPDATA\Packages\Microsoft.WindowsTerminal_8wekyb3d8bbwe\LocalState\settings.json"
-Copy-Item $s "$s.bak"
-```
+Other colour schemes and profiles are preserved. **Comments in `settings.json` are not** — the file is reparsed and rewritten. The script writes a `.bak` copy next to `settings.json` before it overwrites the file, and prints that backup path.
 
 If Windows Terminal has never been opened, `settings.json` won't exist yet. The script says so and skips the appearance step — open the terminal once, then run it again.
 
@@ -90,7 +85,7 @@ If Windows Terminal has never been opened, `settings.json` won't exist yet. The 
 ## Reverting
 
 ```powershell
-# restore the settings backup you made above
+# restore the settings backup the script printed
 Move-Item "$s.bak" $s -Force
 
 # drop the profiles
