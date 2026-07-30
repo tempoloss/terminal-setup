@@ -1,4 +1,4 @@
-# AnekTerminal
+# Terminal-setup
 
 A minimal Windows Terminal setup: PowerShell, Oh My Posh, MesloLGS Nerd Font, and a two-line prompt. One script installs everything and applies it.
 
