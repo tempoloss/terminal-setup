@@ -3,13 +3,13 @@
 A minimal Windows Terminal setup: PowerShell, Oh My Posh, MesloLGS Nerd Font, and a two-line prompt. One script installs everything and applies it.
 
 ```text
-C:\Users\Anek\kao on  master is 󰏗 v0.1.0 via  v3.13.12
+C:\Users\you\projects\demo on  master is 󰏗 v0.1.0 via  v3.13.12
 › your command here
 ```
 
 | part | meaning |
 |---|---|
-| `C:\Users\Anek\kao` | full current directory |
+| `C:\Users\you\projects\demo` | full current directory |
 | `on  master` | git branch — only inside a repo |
 | `is 󰏗 v0.1.0` | project version read from `pyproject.toml`, `package.json`, etc. |
 | `via  v3.13.12` | Python version, resolved through `uv` |
@@ -27,8 +27,8 @@ Everything else — PowerShell 7, Windows Terminal, Oh My Posh, the font — is 
 ## Install
 
 ```powershell
-git clone https://github.com/an8kk/AnekTerminal.git
-cd AnekTerminal/dotfiles/terminal
+git clone https://github.com/tempoloss/terminal-setup.git
+cd terminal-setup/dotfiles/terminal
 pwsh -ExecutionPolicy Bypass -File setup.ps1
 ```
 
